@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Weekly Read — Blog</title>
+<style>
+  :root{
+    --bg:#f4f5f7;
+    --card:#ffffff;
+    --text:#1f2430;
+    --text-muted:#6b7280;
+    --border:#e2e5ea;
+    --primary:#2563eb;
+    --primary-dark:#1d4ed8;
+    --radius:8px;
+  }
+  [data-theme="dark"]{
+    --bg:#15181f;
+    --card:#1d2129;
+    --text:#e7e9ee;
+    --text-muted:#9aa0ac;
+    --border:#2c313c;
+    --primary:#3b82f6;
+    --primary-dark:#60a5fa;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height:1.55;
+    transition:background .15s ease, color .15s ease;
+  }
+  a{color:inherit; text-decoration:none;}
+  img{max-width:100%; display:block;}
+  *:focus-visible{outline:2px solid var(--primary); outline-offset:2px;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 20px;}
+
+  /* ---------- Nav ---------- */
+  nav.site-nav{position:sticky; top:0; z-index:50; background:var(--card); border-bottom:1px solid var(--border);}
+  nav.site-nav .wrap{display:flex; align-items:center; justify-content:space-between; height:64px; gap:16px;}
+  .brand{font-weight:800; font-size:18px; flex-shrink:0;}
+  .nav-links{display:flex; gap:24px; list-style:none; margin:0; padding:0; flex-shrink:0;}
+  .nav-links a{font-size:14px; font-weight:600; color:var(--text-muted);}
+  .nav-links a:hover, .nav-links a.active{color:var(--primary);}
+  .nav-right{display:flex; align-items:center; gap:10px;}
+  .nav-search{
+    font-size:13.5px; padding:8px 12px; border:1px solid var(--border);
+    border-radius:6px; background:var(--bg); color:var(--text); width:170px;
+  }
+  .theme-btn{
+    border:1px solid var(--border); background:var(--bg); color:var(--text);
+    padding:8px 12px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;
+  }
+  .theme-btn:hover{border-color:var(--primary);}
+  .nav-toggle{display:none; background:none; border:1px solid var(--border); border-radius:6px; padding:8px 10px; cursor:pointer; font-size:13px;}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:56px 0 40px; border-bottom:1px solid var(--border);}
+  .hero .eyebrow{font-size:12.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--primary); margin:0 0 8px;}
+  .hero h1{font-size:clamp(28px,4.5vw,40px); margin:0 0 10px; font-weight:800;}
+  .hero p{color:var(--text-muted); max-width:540px; margin:0; font-size:15.5px;}
+
+  /* ---------- Filters ---------- */
+  .filter-bar{display:flex; gap:8px; flex-wrap:wrap; margin:28px 0 24px; align-items:center;}
+  .chip{
+    font-size:13px; font-weight:600; padding:7px 14px; border-radius:20px;
+    border:1px solid var(--border); background:var(--card); color:var(--text-muted); cursor:pointer;
+  }
+  .chip.active{background:var(--primary); border-color:var(--primary); color:#fff;}
+  .result-count{margin-left:auto; font-size:13px; color:var(--text-muted);}
+
+  /* ---------- Post grid ---------- */
+  .post-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:22px; margin-bottom:28px;}
+  .post-card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    overflow:hidden; display:flex; flex-direction:column; cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .post-card:hover{transform:translateY(-4px); box-shadow:0 14px 26px -16px rgba(0,0,0,.28);}
+  .post-thumb{width:100%; height:170px; object-fit:cover; background:var(--border);}
+  .post-body{padding:16px 18px 18px; display:flex; flex-direction:column; gap:8px; flex:1;}
+  .post-cat{font-size:11.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--primary);}
+  .post-title{font-size:16.5px; font-weight:700; margin:0;}
+  .post-excerpt{font-size:13.5px; color:var(--text-muted); margin:0; flex:1;}
+  .post-meta{display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted); margin-top:4px;}
+  .tag-row{display:flex; gap:6px; flex-wrap:wrap;}
+  .tag{font-size:11px; padding:2px 8px; border-radius:20px; background:var(--bg); color:var(--text-muted); border:1px solid var(--border);}
+
+  .load-more-wrap{text-align:center; margin:8px 0 60px;}
+  .btn{
+    font-weight:600; font-size:14.5px; padding:10px 22px; border-radius:6px; cursor:pointer;
+    border:1px solid var(--primary); background:var(--primary); color:#fff; display:inline-block;
+  }
+  .btn:hover{background:var(--primary-dark);}
+  .btn.secondary{background:var(--card); color:var(--text); border-color:var(--border);}
+  .btn.secondary:hover{border-color:var(--text-muted);}
+
+  .empty-state{padding:50px 20px; text-align:center; color:var(--text-muted);}
+
+  /* ---------- Detail view ---------- */
+  .detail{padding:40px 0 60px; display:none;}
+  .detail.active{display:block;}
+  #view-home.hidden{display:none;}
+  .back-link{font-size:13.5px; font-weight:600; color:var(--primary); margin-bottom:20px; display:inline-block;}
+  .detail-cat{font-size:12.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--primary); margin-bottom:8px;}
+  .detail h1{font-size:clamp(26px,4vw,36px); margin:0 0 12px; font-weight:800;}
+  .detail-meta{display:flex; gap:14px; flex-wrap:wrap; color:var(--text-muted); font-size:13.5px; margin-bottom:22px;}
+  .detail-img{width:100%; height:320px; object-fit:cover; border-radius:var(--radius); margin-bottom:26px;}
+  .detail-content{font-size:16px; color:var(--text); max-width:720px;}
+  .detail-content p{margin:0 0 18px; color:var(--text-muted);}
+  .detail-tags{display:flex; gap:8px; flex-wrap:wrap; margin:24px 0;}
+
+  .share-row{display:flex; gap:10px; align-items:center; margin:28px 0; flex-wrap:wrap;}
+  .share-row span{font-size:13px; font-weight:600; color:var(--text-muted);}
+  .share-btn{
+    font-size:13px; font-weight:600; padding:7px 14px; border-radius:6px;
+    border:1px solid var(--border); background:var(--card); cursor:pointer; color:var(--text);
+  }
+  .share-btn:hover{border-color:var(--primary); color:var(--primary);}
+
+  .related-wrap{margin-top:48px; padding-top:32px; border-top:1px solid var(--border); max-width:720px;}
+  .related-wrap h2{font-size:19px; margin:0 0 18px;}
+  .related-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:16px;}
+
+  .comments-wrap{margin-top:48px; padding-top:32px; border-top:1px solid var(--border); max-width:720px;}
+  .comments-wrap h2{font-size:19px; margin:0 0 18px;}
+  .comment-list{display:grid; gap:14px; margin-bottom:22px;}
+  .comment{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;}
+  .comment .who{font-size:13.5px; font-weight:700;}
+  .comment .when{font-size:11.5px; color:var(--text-muted); margin-left:8px; font-weight:400;}
+  .comment p{margin:6px 0 0; font-size:14px; color:var(--text-muted);}
+  #comment-form{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px; display:grid; gap:12px;}
+  .field{display:flex; flex-direction:column; gap:5px;}
+  .field label{font-size:12.5px; font-weight:600; color:var(--text-muted);}
+  .field input, .field textarea{
+    font-size:14px; padding:9px 10px; border:1px solid var(--border); border-radius:6px;
+    background:var(--bg); color:var(--text); font-family:inherit; resize:vertical;
+  }
+  .field input:focus, .field textarea:focus{border-color:var(--primary);}
+  .field-error{font-size:11.5px; color:#b91c1c; min-height:14px;}
+
+  footer{border-top:1px solid var(--border); padding:32px 0; margin-top:20px;}
+  .footer-grid{display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px; align-items:center;}
+  footer p{margin:0; color:var(--text-muted); font-size:13px;}
+  .footer-links{display:flex; gap:18px; list-style:none; margin:0; padding:0;}
+  .footer-links a{font-size:13px; color:var(--text-muted);}
+  .footer-links a:hover{color:var(--primary);}
+
+  @media (max-width:760px){
+    .nav-search{display:none;}
+    .nav-links{
+      position:absolute; top:64px; left:0; right:0; background:var(--card);
+      border-bottom:1px solid var(--border); flex-direction:column; gap:0; padding:8px 0; display:none;
+    }
+    .nav-links.open{display:flex;}
+    .nav-links a{padding:12px 20px; display:block;}
+    .nav-toggle{display:block;}
+    .result-count{margin-left:0; width:100%; order:99;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="wrap">
+    <a href="#/" class="brand">The Weekly Read</a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#/" class="active">Home</a></li>
+      <li><a href="#/?cat=Web%20Development">Web Dev</a></li>
+      <li><a href="#/?cat=Design">Design</a></li>
+      <li><a href="#/?cat=Career">Career</a></li>
+    </ul>
+    <div class="nav-right">
+      <input type="search" class="nav-search" id="nav-search" placeholder="Search articles...">
+      <button class="theme-btn" id="theme-toggle">Dark mode</button>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">Menu</button>
+    </div>
+  </div>
+</nav>
+
+<div id="view-home">
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">The Weekly Read</p>
+      <h1>Ideas on frontend, design & building things well</h1>
+      <p>Short, practical articles on web development, design, and career growth — written for people who'd rather build than scroll.</p>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="filter-bar" id="filter-bar"></div>
+    <div class="post-grid" id="post-grid"></div>
+    <div class="load-more-wrap" id="load-more-wrap">
+      <button class="btn secondary" id="load-more-btn">Load More Articles</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap detail" id="view-detail"></div>
+
+<footer>
+  <div class="wrap footer-grid">
+    <p>&copy; <span id="year"></span> The Weekly Read. All articles are for demo purposes.</p>
+    <ul class="footer-links">
+      <li><a href="#/">Home</a></li>
+      <li><a href="#/?cat=Web%20Development">Web Dev</a></li>
+      <li><a href="#/?cat=Design">Design</a></li>
+      <li><a href="#/?cat=Career">Career</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const STORAGE_COMMENTS = "blog.comments.v1";
+  const THEME_KEY = "blog.theme.v1";
+  const PAGE_SIZE = 6;
+
+  // ---------- Post data ----------
+  const posts = [
+    { id:'p1', title:'CSS Grid vs Flexbox: When to Use Which', category:'Web Development',
+      tags:['CSS','Layout'], date:'2026-07-20', author:'Aisha Verma',
+      img:'https://picsum.photos/seed/gridflex/800/500',
+      excerpt:'A practical guide to picking the right layout tool for the job, with real examples.',
+      content:[
+        'Grid and Flexbox solve different problems, and most layout confusion comes from reaching for one when the other fits better.',
+        'Flexbox shines for one-dimensional layouts — a row of nav links, a card\'s internal spacing, or centering a single element. Grid is built for two-dimensional layouts, where you care about both rows and columns at once.',
+        'A simple rule that holds up in practice: if you are laying things out in a line, reach for Flexbox. If you are laying out a page or a component with a clear row-and-column structure, reach for Grid.',
+        'In real projects, you will often use both together — Grid for the page shell, Flexbox for the components living inside it.'
+      ]},
+    { id:'p2', title:'A Practical Guide to Responsive Images', category:'Web Development',
+      tags:['CSS','Performance'], date:'2026-07-15', author:'Rohan Mehta',
+      img:'https://picsum.photos/seed/responsiveimg/800/500',
+      excerpt:'How to serve the right image size to the right device without hurting performance.',
+      content:[
+        'Shipping one large image to every device is one of the easiest ways to slow down a site, especially on mobile connections.',
+        'The `srcset` and `sizes` attributes let the browser choose the most appropriate image from a set you provide, based on screen size and pixel density.',
+        'Pair this with modern formats like WebP or AVIF, and lazy loading for anything below the fold, and you can cut page weight dramatically without touching your design.'
+      ]},
+    { id:'p3', title:'Designing Forms People Actually Want to Fill Out', category:'Design',
+      tags:['UX','Forms'], date:'2026-07-10', author:'Meera Nair',
+      img:'https://picsum.photos/seed/formsux/800/500',
+      excerpt:'Small changes to labels, spacing, and validation that make forms feel effortless.',
+      content:[
+        'Forms are where good intentions go to die. Every extra field, ambiguous label, or confusing error message is a chance for someone to give up.',
+        'Inline validation — showing errors near the field the moment they are relevant, not just on submit — reduces frustration significantly.',
+        'Group related fields visually, keep labels above inputs rather than beside them, and never rely on placeholder text as a substitute for a real label.'
+      ]},
+    { id:'p4', title:'Color Theory Basics for Developers', category:'Design',
+      tags:['Design','Color'], date:'2026-07-05', author:'Aisha Verma',
+      img:'https://picsum.photos/seed/colortheory/800/500',
+      excerpt:'You do not need to be a designer to pick a color palette that works. Here is the shortcut.',
+      content:[
+        'Most palettes fail not because the individual colors are bad, but because there is no clear hierarchy between them.',
+        'Start with one primary color for actions and emphasis, a neutral scale for text and backgrounds, and one or two accent colors used sparingly.',
+        'Tools like contrast checkers are non-negotiable — a palette that looks nice but fails accessibility contrast ratios is not actually finished.'
+      ]},
+    { id:'p5', title:'How to Actually Prepare for a Frontend Interview', category:'Career',
+      tags:['Career','Interviews'], date:'2026-06-28', author:'Rohan Mehta',
+      img:'https://picsum.photos/seed/interviewprep/800/500',
+      excerpt:'Less LeetCode, more building. What actually gets tested in frontend interviews.',
+      content:[
+        'Frontend interviews increasingly test whether you can build a working, reasonably polished UI component under time pressure — not just algorithm recall.',
+        'Practice building common components from scratch: a modal, a tabs component, an autocomplete search box. Time yourself.',
+        'Be ready to explain your decisions out loud — interviewers care as much about how you think through a problem as the final result.'
+      ]},
+    { id:'p6', title:'Writing a Resume That Survives an ATS', category:'Career',
+      tags:['Career','Resume'], date:'2026-06-20', author:'Meera Nair',
+      img:'https://picsum.photos/seed/resumeats/800/500',
+      excerpt:'Formatting choices that help — and hurt — when your resume goes through automated screening.',
+      content:[
+        'Applicant tracking systems parse resumes as plain text, which means fancy multi-column layouts and graphics can scramble your information before a human ever sees it.',
+        'Stick to standard section headers, avoid tables for layout, and mirror key phrases from the job description where they genuinely apply.',
+        'A clean, single-column resume is not boring — it is the version that actually reaches a recruiter\'s eyes.'
+      ]},
+    { id:'p7', title:'Local Storage vs Session Storage vs Cookies', category:'Web Development',
+      tags:['JavaScript','Storage'], date:'2026-06-12', author:'Rohan Mehta',
+      img:'https://picsum.photos/seed/webstorage/800/500',
+      excerpt:'Three ways to store data in the browser, and how to pick the right one.',
+      content:[
+        'Local Storage persists until explicitly cleared and is ideal for user preferences or data that should survive a browser restart.',
+        'Session Storage clears when the tab closes — useful for data scoped to a single visit, like a multi-step form in progress.',
+        'Cookies are sent with every HTTP request, which makes them useful for authentication but expensive for large amounts of data. Use the right tool for the job rather than defaulting to one.'
+      ]},
+    { id:'p8', title:'Building a Design System from Scratch', category:'Design',
+      tags:['Design','Systems'], date:'2026-06-02', author:'Aisha Verma',
+      img:'https://picsum.photos/seed/designsystem/800/500',
+      excerpt:'Where to start when your product has grown past a single Figma file of components.',
+      content:[
+        'A design system does not need to start big. Begin with tokens: your color palette, spacing scale, and type scale — the primitives everything else is built from.',
+        'From there, document a small set of core components — buttons, inputs, cards — with their states and variants clearly defined.',
+        'The system should grow from real product needs, not from trying to anticipate every possible use case up front.'
+      ]},
+    { id:'p9', title:'Debugging CSS Layout Issues Faster', category:'Web Development',
+      tags:['CSS','Debugging'], date:'2026-05-24', author:'Meera Nair',
+      img:'https://picsum.photos/seed/cssdebug/800/500',
+      excerpt:'A short checklist for when a layout just will not behave.',
+      content:[
+        'Outline every element with a bright border temporarily — it sounds crude, but it instantly reveals unexpected sizing and spacing issues.',
+        'Check for collapsed margins, unset box-sizing, and elements escaping their containers due to absolute positioning without a positioned ancestor.',
+        'Browser DevTools\' layout inspector for Grid and Flexbox containers will visually show you the actual computed tracks and gaps, which is often faster than guessing from CSS alone.'
+      ]},
+  ];
+
+  const els = {
+    postGrid: document.getElementById('post-grid'),
+    filterBar: document.getElementById('filter-bar'),
+    loadMoreWrap: document.getElementById('load-more-wrap'),
+    loadMoreBtn: document.getElementById('load-more-btn'),
+    viewHome: document.getElementById('view-home'),
+    viewDetail: document.getElementById('view-detail'),
+    navSearch: document.getElementById('nav-search'),
+    navLinks: document.getElementById('nav-links'),
+    navToggle: document.getElementById('nav-toggle'),
+    themeToggle: document.getElementById('theme-toggle'),
+  };
+
+  let state = { query:'', category:'all', visibleCount:PAGE_SIZE };
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+  function formatDate(iso){
+    const d = new Date(iso + 'T00:00:00');
+    if(isNaN(d)) return iso;
+    return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  // ---------- Theme ----------
+  function applyTheme(theme){
+    if(theme === 'dark'){
+      document.documentElement.setAttribute('data-theme','dark');
+      els.themeToggle.textContent = 'Light mode';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      els.themeToggle.textContent = 'Dark mode';
+    }
+  }
+  els.themeToggle.addEventListener('click', ()=>{
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+  });
+  applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+
+  // ---------- Mobile nav ----------
+  els.navToggle.addEventListener('click', ()=>{
+    const open = els.navLinks.classList.toggle('open');
+    els.navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  // ---------- Comments ----------
+  function loadComments(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_COMMENTS)) || {}; }
+    catch(e){ return {}; }
+  }
+  function saveComments(data){
+    try{ localStorage.setItem(STORAGE_COMMENTS, JSON.stringify(data)); }
+    catch(e){ console.error('Could not save comment', e); }
+  }
+
+  // ---------- Filter bar ----------
+  function renderFilterBar(){
+    const categories = ['all', ...Array.from(new Set(posts.map(p=>p.category)))];
+    els.filterBar.innerHTML = categories.map(c=>`
+      <button class="chip ${state.category===c ? 'active':''}" data-cat="${escapeHtml(c)}">${c==='all' ? 'All Posts' : escapeHtml(c)}</button>
+    `).join('') + `<span class="result-count" id="result-count"></span>`;
+
+    els.filterBar.querySelectorAll('.chip').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.category = btn.dataset.cat;
+        state.visibleCount = PAGE_SIZE;
+        renderFilterBar();
+        renderGrid();
+      });
+    });
+  }
+
+  // ---------- Grid ----------
+  function getFiltered(){
+    const q = state.query.trim().toLowerCase();
+    return posts.filter(p=>{
+      const matchesCat = state.category === 'all' || p.category === state.category;
+      const matchesQuery = !q ||
+        p.title.toLowerCase().includes(q) ||
+        p.excerpt.toLowerCase().includes(q) ||
+        p.tags.some(t=>t.toLowerCase().includes(q));
+      return matchesCat && matchesQuery;
+    }).sort((a,b)=> b.date.localeCompare(a.date));
+  }
+
+  function renderGrid(){
+    const filtered = getFiltered();
+    const visible = filtered.slice(0, state.visibleCount);
+    const countEl = document.getElementById('result-count');
+    if(countEl) countEl.textContent = `${filtered.length} article${filtered.length===1?'':'s'}`;
+
+    if(visible.length === 0){
+      els.postGrid.innerHTML = `<div class="empty-state">No articles match your search. Try a different term or category.</div>`;
+      els.loadMoreWrap.style.display = 'none';
+      return;
+    }
+
+    els.postGrid.innerHTML = visible.map(p=>`
+      <article class="post-card" data-id="${p.id}">
+        <img class="post-thumb" src="${p.img}" alt="${escapeHtml(p.title)}" loading="lazy">
+        <div class="post-body">
+          <span class="post-cat">${escapeHtml(p.category)}</span>
+          <h3 class="post-title">${escapeHtml(p.title)}</h3>
+          <p class="post-excerpt">${escapeHtml(p.excerpt)}</p>
+          <div class="tag-row">${p.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
+          <div class="post-meta"><span>${formatDate(p.date)}</span><span>${escapeHtml(p.author)}</span></div>
+        </div>
+      </article>
+    `).join('');
+
+    els.postGrid.querySelectorAll('.post-card').forEach(card=>{
+      card.addEventListener('click', ()=>{
+        window.location.hash = '#/post/' + card.dataset.id;
+      });
+    });
+
+    els.loadMoreWrap.style.display = filtered.length > visible.length ? 'block' : 'none';
+  }
+
+  els.loadMoreBtn.addEventListener('click', ()=>{
+    state.visibleCount += PAGE_SIZE;
+    renderGrid();
+  });
+
+  let searchDebounce;
+  els.navSearch.addEventListener('input', ()=>{
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(()=>{
+      state.query = els.navSearch.value;
+      state.visibleCount = PAGE_SIZE;
+      showHome();
+      renderGrid();
+    }, 200);
+  });
+
+  // ---------- Detail view ----------
+  function renderDetail(id){
+    const post = posts.find(p=>p.id === id);
+    if(!post){
+      window.location.hash = '#/';
+      return;
+    }
+
+    const related = posts
+      .filter(p=>p.id !== post.id && (p.category === post.category || p.tags.some(t=>post.tags.includes(t))))
+      .slice(0, 3);
+
+    const comments = (loadComments()[post.id]) || [];
+
+    els.viewDetail.innerHTML = `
+      <a href="#/" class="back-link">&larr; Back to all articles</a>
+      <div class="detail-cat">${escapeHtml(post.category)}</div>
+      <h1>${escapeHtml(post.title)}</h1>
+      <div class="detail-meta">
+        <span>By ${escapeHtml(post.author)}</span>
+        <span>${formatDate(post.date)}</span>
+        <span>${post.tags.length} tags</span>
+      </div>
+      <img class="detail-img" src="${post.img.replace('800/500','1200/600')}" alt="${escapeHtml(post.title)}">
+      <div class="detail-content">
+        ${post.content.map(p=>`<p>${escapeHtml(p)}</p>`).join('')}
+      </div>
+      <div class="detail-tags">${post.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
+
+      <div class="share-row">
+        <span>Share this article:</span>
+        <button class="share-btn" data-share="twitter">Twitter / X</button>
+        <button class="share-btn" data-share="linkedin">LinkedIn</button>
+        <button class="share-btn" data-share="facebook">Facebook</button>
+        <button class="share-btn" data-share="copy">Copy Link</button>
+      </div>
+
+      ${related.length ? `
+      <div class="related-wrap">
+        <h2>Related articles</h2>
+        <div class="related-grid">
+          ${related.map(r=>`
+            <article class="post-card" data-id="${r.id}" style="cursor:pointer;">
+              <img class="post-thumb" src="${r.img}" alt="${escapeHtml(r.title)}" style="height:110px;">
+              <div class="post-body" style="padding:12px 14px 14px;">
+                <h3 class="post-title" style="font-size:14px;">${escapeHtml(r.title)}</h3>
+              </div>
+            </article>
+          `).join('')}
+        </div>
+      </div>` : ''}
+
+      <div class="comments-wrap">
+        <h2>Comments (<span id="comment-count">${comments.length}</span>)</h2>
+        <div class="comment-list" id="comment-list">
+          ${comments.length ? comments.map(c=>`
+            <div class="comment">
+              <span class="who">${escapeHtml(c.name)}<span class="when">${escapeHtml(c.when)}</span></span>
+              <p>${escapeHtml(c.text)}</p>
+            </div>
+          `).join('') : '<p style="color:var(--text-muted); font-size:14px;">No comments yet. Be the first to share your thoughts.</p>'}
+        </div>
+        <form id="comment-form">
+          <div class="field">
+            <label for="c-name">Name</label>
+            <input type="text" id="c-name" placeholder="Your name">
+            <span class="field-error" id="err-c-name"></span>
+          </div>
+          <div class="field">
+            <label for="c-text">Comment</label>
+            <textarea id="c-text" rows="3" placeholder="Share your thoughts..."></textarea>
+            <span class="field-error" id="err-c-text"></span>
+          </div>
+          <button type="submit" class="btn" style="justify-self:start;">Post Comment</button>
+        </form>
+      </div>
+    `;
+
+    // Related post clicks
+    els.viewDetail.querySelectorAll('.related-grid .post-card').forEach(card=>{
+      card.addEventListener('click', ()=>{ window.location.hash = '#/post/' + card.dataset.id; });
+    });
+
+    // Share buttons
+    els.viewDetail.querySelectorAll('[data-share]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const url = encodeURIComponent(window.location.href);
+        const title = encodeURIComponent(post.title);
+        const type = btn.dataset.share;
+        if(type === 'twitter') window.open(`https://twitter.com/intent/tweet?text=${title}&url=${url}`, '_blank');
+        if(type === 'linkedin') window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+        if(type === 'facebook') window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+        if(type === 'copy'){
+          navigator.clipboard.writeText(window.location.href).then(()=>{
+            btn.textContent = 'Copied!';
+            setTimeout(()=> btn.textContent = 'Copy Link', 1500);
+          }).catch(()=>{ alert('Could not copy link automatically. URL: ' + window.location.href); });
+        }
+      });
+    });
+
+    // Comment form
+    const cForm = document.getElementById('comment-form');
+    cForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      const nameEl = document.getElementById('c-name');
+      const textEl = document.getElementById('c-text');
+      const errName = document.getElementById('err-c-name');
+      const errText = document.getElementById('err-c-text');
+      errName.textContent = ''; errText.textContent = '';
+
+      let ok = true;
+      if(!nameEl.value.trim()){ errName.textContent = 'Enter your name.'; ok = false; }
+      if(!textEl.value.trim()){ errText.textContent = 'Write a comment first.'; ok = false; }
+      if(!ok) return;
+
+      const all = loadComments();
+      const list = all[post.id] || [];
+      list.push({ name:nameEl.value.trim(), text:textEl.value.trim(), when:'just now' });
+      all[post.id] = list;
+      saveComments(all);
+      renderDetail(post.id);
+    });
+  }
+
+  // ---------- Routing ----------
+  function showHome(){
+    els.viewHome.classList.remove('hidden');
+    els.viewDetail.classList.remove('active');
+  }
+  function showDetail(id){
+    els.viewHome.classList.add('hidden');
+    els.viewDetail.classList.add('active');
+    renderDetail(id);
+    window.scrollTo(0,0);
+  }
+
+  function handleRoute(){
+    const hash = window.location.hash || '#/';
+    const postMatch = hash.match(/^#\/post\/(.+)$/);
+    if(postMatch){
+      showDetail(postMatch[1]);
+      return;
+    }
+    const catMatch = hash.match(/\?cat=([^&]+)/);
+    if(catMatch){
+      state.category = decodeURIComponent(catMatch[1]);
+      state.visibleCount = PAGE_SIZE;
+      renderFilterBar();
+    }
+    showHome();
+    renderGrid();
+  }
+  window.addEventListener('hashchange', handleRoute);
+
+  // ---------- Init ----------
+  renderFilterBar();
+  renderGrid();
+  handleRoute();
+
+})();
+</script>
+</body>
+</html>
